@@ -1,15 +1,6 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
+package src;
+import java.io.*;
+import java.util.*;
 
 public class Grafo {
     private List<Cidade> vertices;
@@ -51,6 +42,7 @@ public class Grafo {
         }
     }
 
+    // Método que processa as linhas do arquivo
     private void processarLinha(String linha) {
         String[] partes = linha.split(":");
         if (partes.length >= 2) {
@@ -79,6 +71,8 @@ public class Grafo {
         }
     }
 
+    // Método de busca em largura pra recomendação de visitação em todas as cidades
+    // e todas as estradas (a)
     public List<String> buscaLargura() {
         Queue<Cidade> fila = new LinkedList<>();
         int t = 0; // Variável para atribuir valores L (tempo de visita)
@@ -112,8 +106,8 @@ public class Grafo {
                                 fila.add(w);
                                 String aresta = v.getNome() + " -> " + w.getNome();
                                 if (!cidadesDestino.contains(w.getNome())) {
-                                    resultado.add(aresta); // Adicione o resultado à lista se o nome da cidade destino
-                                    cidadesDestino.add(w.getNome()); // Adicione o nome da cidade destino ao resultado
+                                    resultado.add(aresta); // Adiciona o resultado à lista se o nome da cidade destino
+                                    cidadesDestino.add(w.getNome()); // Adiciona o nome da cidade destino ao resultado
                                 }
                             }
                         }
@@ -125,12 +119,14 @@ public class Grafo {
         return resultado;
     }
 
+    // Método para exibir estrada de qualquer cidade para qualquer cidade (b)
     public boolean todasCidadesConectadas() {
         Set<Cidade> visitados = new HashSet<>();
         dfs(vertices.get(0), visitados);
         return visitados.size() == vertices.size();
     }
 
+    // Método de busca DFS (em profundidade)
     private void dfs(Cidade cidadeAtual, Set<Cidade> visitados) {
         visitados.add(cidadeAtual);
         for (Estrada estrada : arestas) {
@@ -142,12 +138,9 @@ public class Grafo {
         }
     }
 
+    //Método de para a identificação de cidades que não é possível chegar via transporte terrestre (c)
 
-
-
-
-
- public List<String> identificarCidadesIsoladas() {
+    public List<String> identificarCidadesIsoladas() {
         List<String> cidadesOrigem = new ArrayList<>();
         List<String> cidadesDestino = new ArrayList<>();
         List<String> cidadesIsoladas = new ArrayList<>();
@@ -178,67 +171,65 @@ public class Grafo {
         return cidadesIsoladas;
     }
 
+    //Métodos para o percorrer todas as cidades conectadas na menor rota possível (d)
 
+    public List<Cidade> encontrarMenorRota() {
+        List<Cidade> melhorRota = null;
+        List<Cidade> todasCidades = new ArrayList<>(vertices);
+        todasCidades.remove(0);
 
+        int menorDistancia = Integer.MAX_VALUE;
 
+        // Gere todas as permutações das cidades
+        List<List<Cidade>> permutacoes = permutacoes(todasCidades);
 
-public List<Cidade> encontrarMenorRota() {
-    List<Cidade> melhorRota = null;
-    List<Cidade> todasCidades = new ArrayList<>(vertices);
-    todasCidades.remove(0); 
+        for (List<Cidade> rota : permutacoes) {
+            rota.add(0, vertices.get(0)); // Adicione a rodoviária no início e final da rota
+            rota.add(vertices.get(0));
 
-    int menorDistancia = Integer.MAX_VALUE;
+            int distanciaTotal = calcularDistanciaTotal(rota);
 
-    // Gere todas as permutações das cidades
-    List<List<Cidade>> permutacoes = permutacoes(todasCidades);
-
-    for (List<Cidade> rota : permutacoes) {
-        rota.add(0, vertices.get(0)); // Adicione a rodoviária no início e final da rota
-        rota.add(vertices.get(0));
-
-        int distanciaTotal = calcularDistanciaTotal(rota);
-
-        if (distanciaTotal < menorDistancia) {
-            menorDistancia = distanciaTotal;
-            melhorRota = rota;
+            if (distanciaTotal < menorDistancia) {
+                menorDistancia = distanciaTotal;
+                melhorRota = rota;
+            }
         }
+
+        return melhorRota;
     }
 
-    return melhorRota;
-}
+    private int calcularDistanciaTotal(List<Cidade> rota) {
+        int distanciaTotal = 0;
+        for (int i = 0; i < rota.size() - 1; i++) {
+            Cidade cidadeOrigem = rota.get(i);
+            Cidade cidadeDestino = rota.get(i + 1);
 
-private int calcularDistanciaTotal(List<Cidade> rota) {
-    int distanciaTotal = 0;
-    for (int i = 0; i < rota.size() - 1; i++) {
-        Cidade cidadeOrigem = rota.get(i);
-        Cidade cidadeDestino = rota.get(i + 1);
+            for (Estrada estrada : arestas) {
+                if ((estrada.getOrigem().equals(cidadeOrigem) && estrada.getDestino().equals(cidadeDestino))
+                        || (estrada.getOrigem().equals(cidadeDestino) && estrada.getDestino().equals(cidadeOrigem))) {
+                    distanciaTotal += estrada.getPeso();
+                    break;
+                }
+            }
+        }
+        return distanciaTotal;
+    }
 
-        for (Estrada estrada : arestas) {
-            if ((estrada.getOrigem().equals(cidadeOrigem) && estrada.getDestino().equals(cidadeDestino))
-                    || (estrada.getOrigem().equals(cidadeDestino) && estrada.getDestino().equals(cidadeOrigem))) {
-                distanciaTotal += estrada.getPeso();
-                break;
+    private List<List<Cidade>> permutacoes(List<Cidade> cidades) {
+        List<List<Cidade>> permutacoes = new ArrayList<>();
+        permutacoesRecursivo(cidades, 0, permutacoes);
+        return permutacoes;
+    }
+
+    private void permutacoesRecursivo(List<Cidade> cidades, int inicio, List<List<Cidade>> permutacoes) {
+        if (inicio == cidades.size()) {
+            permutacoes.add(new ArrayList<>(cidades));
+        } else {
+            for (int i = inicio; i < cidades.size(); i++) {
+                Collections.swap(cidades, inicio, i);
+                permutacoesRecursivo(cidades, inicio + 1, permutacoes);
+                Collections.swap(cidades, inicio, i); // Restaura a ordem original
             }
         }
     }
-    return distanciaTotal;
-}
-
-private List<List<Cidade>> permutacoes(List<Cidade> cidades) {
-    List<List<Cidade>> permutacoes = new ArrayList<>();
-    permutacoesRecursivo(cidades, 0, permutacoes);
-    return permutacoes;
-}
-
-private void permutacoesRecursivo(List<Cidade> cidades, int inicio, List<List<Cidade>> permutacoes) {
-    if (inicio == cidades.size()) {
-        permutacoes.add(new ArrayList<>(cidades));
-    } else {
-        for (int i = inicio; i < cidades.size(); i++) {
-            Collections.swap(cidades, inicio, i);
-            permutacoesRecursivo(cidades, inicio + 1, permutacoes);
-            Collections.swap(cidades, inicio, i); // Restaura a ordem original
-        }
-    }
-}
 }
