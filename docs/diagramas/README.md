@@ -9,8 +9,8 @@ Aqui estão todas as versões dos diagramas de classes, sendo a última a mais a
 
 **Versão 2:**
 
-![Versão 2](02.PNG)
+![Versão 2](02.png)
 
 # Representação gráfica do grafo
 
-![Representacao grafica do grafo](Representaçao grafica de grafo.jpg)
+![Representacao grafica do grafo](Representaçao%20grafica%20de%20grafo.jpg)
